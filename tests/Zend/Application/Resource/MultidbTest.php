@@ -21,13 +21,8 @@
  */
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
-    define('PHPUnit_MAIN_METHOD', 'Zend_Application_Resource_MailTest::main');
+    define('PHPUnit_MAIN_METHOD', 'Zend_Application_Resource_MultidbTest::main');
 }
-
-/**
- * Test helper
- */
-require_once dirname(__FILE__) . '/../../../TestHelper.php';
 
 /**
  * Zend_Loader_Autoloader
@@ -54,7 +49,7 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
 {
     protected $_dbOptions = array('db1' => array('adapter' => 'pdo_mysql','dbname' => 'db1','password' => 'XXXX','username' => 'webuser'),
                                 'db2' => array('adapter' => 'pdo_pgsql', 'dbname' => 'db2', 'password' => 'notthatpublic', 'username' => 'dba'));
-    
+
     public static function main()
     {
         $suite  = new PHPUnit_Framework_TestSuite(__CLASS__);
@@ -82,7 +77,8 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
     public function tearDown()
     {
         Zend_Db_Table::setDefaultAdapter(null);
-        
+        Zend_Db_Table::setDefaultMetadataCache();
+
         // Restore original autoloaders
         $loaders = spl_autoload_functions();
         foreach ($loaders as $loader) {
@@ -105,7 +101,7 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
         $res = $resource->init();
         $this->assertTrue($res instanceof Zend_Application_Resource_Multidb);
     }
-    
+
     public function testDbsAreSetupCorrectlyObject()
     {
         $resource = new Zend_Application_Resource_Multidb(array());
@@ -115,12 +111,12 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($res->getDb('db1') instanceof Zend_Db_Adapter_Pdo_Mysql);
         $this->assertTrue($res->getDb('db2') instanceof Zend_Db_Adapter_Pdo_Pgsql);
     }
-    
+
     public function testGetDefaultIsSetAndReturnedObject()
     {
         $options = $this->_dbOptions;
         $options['db2']['default'] = true;
-        
+
         $resource = new Zend_Application_Resource_Multidb(array());
         $resource->setBootstrap($this->bootstrap);
         $resource->setOptions($options);
@@ -128,10 +124,10 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($res->getDb() instanceof Zend_Db_Adapter_Pdo_Pgsql);
         $this->assertTrue($res->isDefault($res->getDb('db2')));
         $this->assertTrue($res->isDefault('db2'));
-        
+
         $options = $this->_dbOptions;
         $options['db2']['isDefaultTableAdapter'] = true;
-        
+
         $resource = new Zend_Application_Resource_Multidb(array());
         $resource->setBootstrap($this->bootstrap);
         $resource->setOptions($options);
@@ -140,9 +136,9 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($res->isDefault($res->getDb('db2')));
         $this->assertTrue($res->isDefault('db2'));
         $this->assertTrue(Zend_Db_Table::getDefaultAdapter() instanceof Zend_Db_Adapter_Pdo_Pgsql);
-        
+
     }
-    
+
     public function testGetDefaultRandomWhenNoDefaultWasSetObject()
     {
         $resource = new Zend_Application_Resource_Multidb(array());
@@ -153,7 +149,7 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($res->getDefaultDb(true) instanceof Zend_Db_Adapter_Pdo_Mysql);
         $this->assertNull($res->getDefaultDb(false));
     }
-    
+
     public function testGetDbWithFaultyDbNameThrowsException()
     {
         $resource = new Zend_Application_Resource_Multidb(array());
@@ -168,7 +164,7 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
             $this->assertEquals($e->getMessage(), 'A DB adapter was tried to retrieve, but was not configured');
         }
     }
-    
+
     /**
      * @group ZF-9131
      */
@@ -176,23 +172,78 @@ class Zend_Application_Resource_MultidbTest extends PHPUnit_Framework_TestCase
     {
         $resource = new Zend_Application_Resource_Multidb(array());
         $resource->setBootstrap($this->bootstrap);
-        $resource->setOptions($this->_dbOptions);
+        $options = $this->_dbOptions;
+        $options['db2']['isDefaultTableAdapter'] = true;
+        $resource->setOptions($options);
         $res = $resource->init();
-        
+
         $expected = array(
             'dbname' => 'db2',
             'password' => 'notthatpublic',
             'username' => 'dba',
             'charset' => null,
             'persistent' => false,
-            'options' => array('caseFolding' => 0, 'autoQuoteIdentifiers' => true),
+            'options' => array(
+                'caseFolding'          => 0,
+                'autoQuoteIdentifiers' => true,
+                'fetchMode'            => 2),
             'driver_options' => array());
+        $this->assertEquals($expected, $res->getDb('db2')->getConfig());
+
+        $options = $this->_dbOptions;
+        $options['db2']['default'] = true;
+        $resource->setOptions($options);
+        $res = $resource->init();
         $this->assertEquals($expected, $res->getDb('db2')->getConfig());
     }
 
-    
+    /**
+     * @group ZF-10049
+     */
+    public function testSetDefaultMetadataCache()
+    {
+        $cache = Zend_Cache::factory('Core', 'Black Hole', array(
+            'lifetime' => 120,
+            'automatic_serialization' => true
+        ));
+
+        $options = $this->_dbOptions;
+        $options['defaultMetadataCache'] = $cache;
+        $resource = new Zend_Application_Resource_Multidb($options);
+        $resource->init();
+        $this->assertType('Zend_Cache_Core', Zend_Db_Table::getDefaultMetadataCache());
+    }
+
+    /**
+     * @group ZF-10049
+     */
+    public function testSetDefaultMetadataCacheFromCacheManager()
+    {
+        $configCache = array(
+            'database' => array(
+                'frontend' => array(
+                    'name' => 'Core',
+                    'options' => array(
+                        'lifetime' => 120,
+                        'automatic_serialization' => true
+                    )
+                ),
+                'backend' => array(
+                    'name' => 'Black Hole'
+                )
+            )
+        );
+        $this->bootstrap->registerPluginResource('cachemanager', $configCache);
+
+        $options = $this->_dbOptions;
+        $options['defaultMetadataCache'] = 'database';
+        $resource = new Zend_Application_Resource_Multidb($options);
+        $resource->setBootstrap($this->bootstrap);
+        $resource->init();
+        $this->assertType('Zend_Cache_Core', Zend_Db_Table::getDefaultMetadataCache());
+    }
 }
 
-if (PHPUnit_MAIN_METHOD == 'Zend_Application_Resource_LogTest::main') {
-    Zend_Application_Resource_LogTest::main();
+if (PHPUnit_MAIN_METHOD == 'Zend_Application_Resource_MultidbTest::main') {
+    Zend_Application_Resource_MultidbTest::main();
 }

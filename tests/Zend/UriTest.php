@@ -25,11 +25,6 @@ if (!defined('PHPUnit_MAIN_METHOD')) {
 }
 
 /**
- * Test helper
- */
-require_once dirname(__FILE__) . '/../TestHelper.php';
-
-/**
  * Zend_Uri
  */
 require_once 'Zend/Uri.php';
@@ -134,6 +129,39 @@ class Zend_UriTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Tests that if an exception is thrown when calling the __toString()
+     * method an empty string is returned and a Warning is triggered, instead
+     * of a Fatal Error being triggered.
+     *
+     * @group ZF-10405
+     */
+    public function testToStringRaisesWarningWhenExceptionCaught()
+    {
+        $uri = Zend_Uri::factory('http://example.com', 'Zend_Uri_ExceptionCausing');
+
+        set_error_handler(array($this, 'handleErrors'), E_USER_WARNING);
+
+        $text = sprintf('%s', $uri);
+
+        restore_error_handler();
+
+        $this->assertTrue(empty($text));
+        $this->assertTrue(isset($this->error));
+        $this->assertContains('Exception in getUri()', $this->error);
+
+    }
+
+    /**
+     * Error handler for testExceptionThrownInToString()
+     *
+     * @group ZF-10405
+     */
+    public function handleErrors($errno, $errstr, $errfile = '', $errline = 0, array $errcontext = array())
+    {
+        $this->error = $errstr;
+    }
+
+    /**
      * Tests that an invalid $uri throws an exception and that the
      * message of that exception matches $regex.
      *
@@ -157,12 +185,49 @@ class Zend_UriTest extends PHPUnit_Framework_TestCase
      *
      * @param string $uri
      */
-    protected function _testValidUri($uri)
+    protected function _testValidUri($uri, $className = null)
     {
-        $uri = Zend_Uri::factory($uri);
+        $uri = Zend_Uri::factory($uri, $className);
         $this->assertTrue($uri instanceof Zend_Uri, 'Zend_Uri object not returned.');
+        return $uri;
     }
 
+    public function testFactoryWithUnExistingClassThrowException()
+    {
+        $this->setExpectedException('Zend_Uri_Exception', '"This_Is_An_Unknown_Class" not found');
+        Zend_Uri::factory('http://example.net', 'This_Is_An_Unknown_Class');
+    }
+
+    public function testFactoryWithExistingClassButNotImplementingZendUriThrowException()
+    {
+        $this->setExpectedException('Zend_Uri_Exception', '"Fake_Zend_Uri" is not an instance of Zend_Uri');
+        Zend_Uri::factory('http://example.net', 'Fake_Zend_Uri');
+    }
+
+    public function testFactoryWithExistingClassReturnObject()
+    {
+        $uri = $this->_testValidUri('http://example.net', 'Zend_Uri_Mock');
+        $this->assertTrue($uri instanceof Zend_Uri_Mock, 'Zend_Uri_Mock object not returned.');
+    }
+
+}
+class Zend_Uri_Mock extends Zend_Uri
+{
+    protected function __construct($scheme, $schemeSpecific = '') { }
+    public function getUri() { }
+    public function valid() { }
+}
+class Zend_Uri_ExceptionCausing extends Zend_Uri
+{
+    protected function __construct($scheme, $schemeSpecific = '') { }
+    public function valid() { }
+    public function getUri()
+    {
+        throw new Exception('Exception in getUri()');
+    }
+}
+class Fake_Zend_Uri
+{
 }
 
 // Call Zend_UriTest::main() if this source file is executed directly.

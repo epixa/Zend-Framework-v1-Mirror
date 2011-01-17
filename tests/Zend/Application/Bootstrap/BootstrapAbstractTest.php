@@ -17,17 +17,12 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: BootstrapAbstractTest.php 20988 2010-02-08 16:44:44Z matthew $
+ * @version    $Id: BootstrapAbstractTest.php 23522 2010-12-16 20:33:22Z andries $
  */
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'Zend_Application_Bootstrap_BootstrapAbstractTest::main');
 }
-
-/**
- * Test helper
- */
-require_once dirname(__FILE__) . '/../../../TestHelper.php';
 
 /**
  * Zend_Loader_Autoloader
@@ -728,6 +723,47 @@ class Zend_Application_Bootstrap_BootstrapAbstractTest extends PHPUnit_Framework
     {
         $bootstrap = new Zend_Application_Bootstrap_Bootstrap($this->application);
         $bootstrap->setApplication($bootstrap);
+    }
+
+    /**
+     * @group ZF-7696
+     */
+    public function testUsingFallbackAutoloaderWithModulesShouldNotResultInFrontcontrollerNotFoundWarning()
+    {
+        require_once dirname(__FILE__) . '/../_files/Zf7696Bootstrap.php';
+        $this->autoloader->setFallbackAutoloader(true);
+        $options = array(
+            'Resources' => array(
+                'modules' => array(),
+            ),
+        );
+        $this->application->setOptions($options);
+        $bootstrap = new Zf7696Bootstrap($this->application);
+        $bootstrap->bootstrap(array('modules'));
+    }
+
+    /**
+     * @group ZF-10199
+     */
+    public function testHasOptionShouldTreatOptionKeysAsCaseInsensitive()
+    {
+        $application = $this->application;
+        $application->setOptions(array(
+            'fooBar' => 'baz',
+        ));
+        $this->assertTrue($application->getBootstrap()->hasOption('FooBar'));
+    }
+
+    /**
+     * @group ZF-10199
+     */
+    public function testGetOptionShouldTreatOptionKeysAsCaseInsensitive()
+    {
+        $application = $this->application;
+        $application->setOptions(array(
+            'fooBar' => 'baz',
+        ));
+        $this->assertEquals('baz', $application->getBootstrap()->getOption('FooBar'));
     }
 }
 

@@ -17,11 +17,10 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: RsaTest.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: RsaTest.php 23514 2010-12-15 19:29:04Z mjh_ca $
  */
 
 require_once 'Zend/Crypt/Rsa.php';
-require_once 'PHPUnit/Framework/TestCase.php';
 
 
 /**
@@ -39,8 +38,18 @@ class Zend_Crypt_RsaTest extends PHPUnit_Framework_TestCase
 
     protected $_testPemPath = null;
 
-    public function setup()
+    public function setUp()
     {
+        try {
+            $rsaObject = new Zend_Crypt_Rsa();
+        } catch (Zend_Crypt_Rsa_Exception $e) {
+            if (strpos($e->getMessage(), 'requires openssl extention') !== false) {
+                $this->markTestSkipped($e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
+
         $this->_testPemString = <<<RSAKEY
 -----BEGIN RSA PRIVATE KEY-----
 MIIBOgIBAAJBANDiE2+Xi/WnO+s120NiiJhNyIButVu6zxqlVzz0wy2j4kQVUC4Z
@@ -313,6 +322,15 @@ CERT;
         } catch (Zend_Crypt_Exception $e) {
             $this->fail('Passphrase loading failed of a private key');
         }
+    }
+
+    /**
+     * @group ZF-8846
+     */
+    public function testLoadsPublicKeyFromPEMWithoutPrivateKeyAndThrowsNoException()
+    {
+        $rsa = new Zend_Crypt_Rsa;
+        $rsa->setPemString($this->_testPemStringPublic);
     }
 
 }

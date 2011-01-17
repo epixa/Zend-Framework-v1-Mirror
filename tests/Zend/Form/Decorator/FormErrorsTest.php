@@ -17,15 +17,13 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: FormErrorsTest.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: FormErrorsTest.php 23522 2010-12-16 20:33:22Z andries $
  */
 
 // Call Zend_Form_Decorator_FormErrorsTest::main() if this source file is executed directly.
 if (!defined("PHPUnit_MAIN_METHOD")) {
     define("PHPUnit_MAIN_METHOD", "Zend_Form_Decorator_FormErrorsTest::main");
 }
-
-require_once dirname(__FILE__) . '/../../../TestHelper.php';
 
 require_once 'Zend/Form/Decorator/FormErrors.php';
 require_once 'Zend/Form.php';
@@ -252,6 +250,43 @@ class Zend_Form_Decorator_FormErrorsTest extends PHPUnit_Framework_TestCase
                 $this->assertContains($value, $markup);
             }
         }
+    }
+
+    public function testRenderIsArrayForm()
+    {
+        $this->setupForm();
+        $this->form->setName('foo')
+                   ->setIsArray(true);
+        $content = 'test content';
+        $test = $this->decorator->render($content);
+        $this->assertContains($content, $test);
+        foreach ($this->form->getMessages() as $name => $messages) {
+            while (($message = current($messages))) {
+                if (is_string($message)) {
+                    $this->assertContains($message, $test, var_export($messages, 1));
+                }
+                if (false === next($messages) && is_array(prev($messages))) {
+                    $messages = current($messages);
+                }
+            }
+        }
+    }
+
+    public function testCustomFormErrors()
+    {
+        $this->setupForm();
+        $this->form->addDecorator($this->decorator)
+                   ->addError('form-badness');
+        $html = $this->form->render();
+        $this->assertContains('form-badness', $html);
+
+        $this->decorator->setOnlyCustomFormErrors(true);
+        $html = $this->form->render();
+        $this->assertNotRegexp('/form-errors.*?Master Foo/', $html);
+
+        $this->decorator->setShowCustomFormErrors(false);
+        $html = $this->form->render();
+        $this->assertNotContains('form-badness', $html);
     }
 
     /**

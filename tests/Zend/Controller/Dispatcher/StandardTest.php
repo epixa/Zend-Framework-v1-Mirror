@@ -17,15 +17,13 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: StandardTest.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: StandardTest.php 23522 2010-12-16 20:33:22Z andries $
  */
 
 // Call Zend_Controller_Dispatcher_StandardTest::main() if this source file is executed directly.
 if (!defined("PHPUnit_MAIN_METHOD")) {
     define("PHPUnit_MAIN_METHOD", "Zend_Controller_Dispatcher_StandardTest::main");
 }
-
-require_once dirname(__FILE__) . '/../../../TestHelper.php';
 
 require_once 'Zend/Controller/Dispatcher/Standard.php';
 require_once 'Zend/Controller/Action/HelperBroker.php';
@@ -134,6 +132,30 @@ class Zend_Controller_Dispatcher_StandardTest extends PHPUnit_Framework_TestCase
         $request->setControllerName('bogus');
         $request->setActionName('bar');
         $this->assertFalse($this->_dispatcher->isDispatchable($request), var_export($this->_dispatcher->getControllerDirectory(), 1));
+    }
+
+    /**
+     * @group ZF-8222
+     */
+    public function testIsDispatchableManuallyIncludedController()
+    {
+        require_once dirname(__FILE__) . '/../_files/ManuallyIncludedControllers.php';
+        $request = new Zend_Controller_Request_Http();
+
+
+        $this->_dispatcher->setParam('prefixDefaultModule', true);
+
+        $request->setControllerName('included');
+        $this->assertFalse($this->_dispatcher->isDispatchable($request));
+
+        $request->setControllerName('included-prefix');
+        $this->assertTrue($this->_dispatcher->isDispatchable($request));
+
+        $this->_dispatcher->setParam('prefixDefaultModule', false);
+
+        $request->setModuleName('admin');
+        $request->setControllerName('included-admin');
+        $this->assertTrue($this->_dispatcher->isDispatchable($request));
     }
 
     public function testSetGetResponse()

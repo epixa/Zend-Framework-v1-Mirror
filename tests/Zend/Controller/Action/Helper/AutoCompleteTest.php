@@ -17,17 +17,14 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: AutoCompleteTest.php 20096 2010-01-06 02:05:09Z bkarwin $
+ * @version    $Id: AutoCompleteTest.php 23522 2010-12-16 20:33:22Z andries $
  */
 
 // Call Zend_Controller_Action_Helper_AutoCompleteTest::main() if this source file is executed directly.
 if (!defined("PHPUnit_MAIN_METHOD")) {
-    require_once dirname(__FILE__) . '/../../../../TestHelper.php';
     define("PHPUnit_MAIN_METHOD", "Zend_Controller_Action_Helper_AutoCompleteTest::main");
 }
 
-require_once "PHPUnit/Framework/TestCase.php";
-require_once "PHPUnit/Framework/TestSuite.php";
 
 require_once 'Zend/Controller/Action/Helper/AutoCompleteDojo.php';
 require_once 'Zend/Controller/Action/Helper/AutoCompleteScriptaculous.php';
@@ -62,7 +59,6 @@ class Zend_Controller_Action_Helper_AutoCompleteTest extends PHPUnit_Framework_T
      */
     public static function main()
     {
-        require_once "PHPUnit/TextUI/TestRunner.php";
 
         $suite  = new PHPUnit_Framework_TestSuite("Zend_Controller_Action_Helper_AutoCompleteTest");
         $result = PHPUnit_TextUI_TestRunner::run($suite);
@@ -185,6 +181,24 @@ class Zend_Controller_Action_Helper_AutoCompleteTest extends PHPUnit_Framework_T
         $encoded = $dojo->direct($data, false, true);
         $this->assertTrue($this->layout->isEnabled());
         $this->assertFalse($this->viewRenderer->getNoRender());
+    }
+    /**
+     * @group   ZF-9126
+     */
+    public function testDojoHelperEncodesUnicodeChars()
+    {
+        $dojo = new Zend_Controller_Action_Helper_AutoCompleteDojo();
+        $dojo->suppressExit = true;
+        $data = array ('garçon', 'schließen', 'Helgi Þormar Þorbjörnsson');
+        $encoded = $dojo->direct($data);
+        $body = $this->response->getBody();
+        $decoded = Zend_Json::decode($encoded);
+        $test = array ();
+        foreach ($decoded['items'] as $item) {
+            $test[] = $item['name'];
+        }
+        $this->assertSame($data, $test);
+        $this->assertSame($encoded, $body);
     }
 
     public function testScriptaculousHelperThrowsExceptionOnInvalidDataFormat()
