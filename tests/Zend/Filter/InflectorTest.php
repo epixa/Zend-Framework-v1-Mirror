@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Filter
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: InflectorTest.php 23522 2010-12-16 20:33:22Z andries $
+ * @version    $Id: InflectorTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 
@@ -43,7 +43,7 @@ require_once 'Zend/Config.php';
  * @category   Zend
  * @package    Zend_Filter
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Filter
  */
@@ -428,7 +428,7 @@ class Zend_Filter_InflectorTest extends PHPUnit_Framework_TestCase
     /**
      * Added str_replace('\\', '\\\\', ..) to all processedParts values to disable backreferences
      *
-     * @issue ZF-2538 Zend_Filter_Inflector::filter() fails with all numeric folder on Windows
+     * @group ZF-2538 Zend_Filter_Inflector::filter() fails with all numeric folder on Windows
      */
     public function testCheckInflectorWithPregBackreferenceLikeParts()
     {
@@ -458,7 +458,7 @@ class Zend_Filter_InflectorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-2522
+     * @group ZF-2522
      */
     public function testTestForFalseInConstructorParams()
     {
@@ -471,7 +471,7 @@ class Zend_Filter_InflectorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-2964
+     * @group ZF-2964
      */
     public function testNoInflectableTarget()
     {
@@ -481,7 +481,7 @@ class Zend_Filter_InflectorTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-7544
+     * @group ZF-7544
      */
     public function testAddFilterRuleMultipleTimes()
     {

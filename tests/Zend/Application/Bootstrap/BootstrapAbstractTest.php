@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Application
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: BootstrapAbstractTest.php 23522 2010-12-16 20:33:22Z andries $
+ * @version    $Id: BootstrapAbstractTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
@@ -58,7 +58,7 @@ require_once 'Zend/Application/Bootstrap/Bootstrap.php';
  * @category   Zend
  * @package    Zend_Application
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Application
  */
@@ -764,6 +764,20 @@ class Zend_Application_Bootstrap_BootstrapAbstractTest extends PHPUnit_Framework
             'fooBar' => 'baz',
         ));
         $this->assertEquals('baz', $application->getBootstrap()->getOption('FooBar'));
+    }
+
+    /**
+     * @group ZF-8751
+     * @group ZF-10842
+     */
+    public function testPathDefaultZendXToPluginsResources()
+    {
+        $application = $this->application
+                            ->getBootstrap()
+                            ->getPluginLoader();
+
+        $paths = $application->getPaths('ZendX_Application_Resource_');
+        $this->assertEquals('ZendX/Application/Resource/', $paths[0]);
     }
 }
 

@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Service_Amazon_SimpleDb
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: OnlineTest.php 11973 2008-10-15 16:00:56Z matthew $
  */
@@ -49,7 +49,7 @@ require_once 'Zend/Config/Ini.php';
  * @category   Zend
  * @package    Zend_Service_Amazon_SimpleDb
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Service_Amazon_SimpleDb_OnlineTest extends PHPUnit_Framework_TestCase
@@ -343,12 +343,6 @@ class Zend_Service_Amazon_SimpleDb_OnlineTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    /**
-     *
-     * @param $maxNumberOfDomains Integer between 1 and 100
-     * @param $nextToken          Integer between 1 and 100
-     * @return array              0 or more domain names
-     */
     public function testListDomains() {
         $domainName = null;
         try {
@@ -394,10 +388,6 @@ class Zend_Service_Amazon_SimpleDb_OnlineTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    /**
-     * @param $domainName string Name of the domain for which metadata will be requested
-     * @return array Key/value array of metadatum names and values.
-     */
     public function testDomainMetadata() {
         $domainName = $this->_testDomainNamePrefix . '_testDomainMetadata';
         $this->_amazon->deleteDomain($domainName);
@@ -428,11 +418,6 @@ class Zend_Service_Amazon_SimpleDb_OnlineTest extends PHPUnit_Framework_TestCase
         }
     }
 
-    /**
-     *
-     * @param $domainName	string	Valid domain name of the domain to create
-     * @return 				boolean True if successful, false if not
-     */
 	public function testCreateDomain() {
 	    $domainName = $this->_testDomainNamePrefix . '_testCreateDomain';
         $this->_amazon->deleteDomain($domainName);

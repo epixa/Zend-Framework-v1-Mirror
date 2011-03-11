@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Config
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id $
  */
@@ -37,7 +37,7 @@ require_once 'Zend/Auth/Adapter/Interface.php';
 require_once 'Zend/Session.php';
 
 /**
- * @issue ZF-7882 - temp solution provided by {@link http://www.alexatnet.com/node/12}
+ * @group ZF-7882 - temp solution provided by {@link http://www.alexatnet.com/node/12}
  */
 Zend_Session::start();
 
@@ -46,7 +46,7 @@ Zend_Session::start();
  * @category   Zend
  * @package    Zend_Auth
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Auth
  */

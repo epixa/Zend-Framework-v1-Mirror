@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Acl
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: AclTest.php 23566 2010-12-20 07:54:20Z mjh_ca $
+ * @version    $Id: AclTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 require_once 'Zend/Acl.php';
@@ -30,7 +30,7 @@ require_once dirname(__FILE__) . '/_files/MockAssertion.php';
  * @package    Zend_Acl
  * @subpackage UnitTests
  * @group      Zend_Acl
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Zend_Acl_AclTest extends PHPUnit_Framework_TestCase
@@ -1181,7 +1181,7 @@ class Zend_Acl_AclTest extends PHPUnit_Framework_TestCase
     /**
      * Returns an array of registered roles
      * @expectedException PHPUnit_Framework_Error
-     * @issue ZF-5638
+     * @group ZF-5638
      */
     public function testGetRegisteredRoles()
     {

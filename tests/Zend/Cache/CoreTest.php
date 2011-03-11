@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Cache
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: CoreTest.php 23514 2010-12-15 19:29:04Z mjh_ca $
+ * @version    $Id: CoreTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -34,7 +34,7 @@ require_once 'Zend/Config.php';
  * @category   Zend
  * @package    Zend_Cache
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Cache
  */
@@ -62,7 +62,7 @@ class Zend_Cache_CoreTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-7568
+     * @group ZF-7568
      */
     public function testConstructorCorrectCallWithZendConfig()
     {
@@ -72,7 +72,7 @@ class Zend_Cache_CoreTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-7568
+     * @group ZF-7568
      */
     public function testSettingOptionsWithZendConfig()
     {
@@ -284,13 +284,15 @@ class Zend_Cache_CoreTest extends PHPUnit_Framework_TestCase
 
     public function testSaveCorrectCallButFileCorruption()
     {
+        $cacheIdPrefix = 'cacheIdPrefix';
+        $this->_instance->setOption('cache_id_prefix', $cacheIdPrefix);
         $res = $this->_instance->save('data', 'false', array('tag1', 'tag2'));
         $logs = $this->_backend->getAllLogs();
         $expected1 = array(
             'methodName' => 'save',
             'args' => array(
                 0 => 'data',
-                1 => 'false',
+                1 => $cacheIdPrefix . 'false',
                 2 => array(
                     0 => 'tag1',
                     1 => 'tag2'
@@ -300,7 +302,7 @@ class Zend_Cache_CoreTest extends PHPUnit_Framework_TestCase
         $expected2 = array(
             'methodName' => 'remove',
             'args' => array(
-                0 => 'false'
+                0 => $cacheIdPrefix.'false'
             )
         );
         $this->assertFalse($res);

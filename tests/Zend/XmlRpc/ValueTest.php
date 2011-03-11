@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version $Id: ValueTest.php 23580 2010-12-27 10:58:21Z alexander $
+ * @version $Id: ValueTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 require_once 'Zend/XmlRpc/Value.php';
@@ -41,7 +41,7 @@ require_once 'Zend/Date.php';
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_XmlRpc
  */
@@ -813,6 +813,83 @@ class Zend_XmlRpc_ValueTest extends PHPUnit_Framework_TestCase
     {
         $xmlRpcValue = new Zend_XmlRpc_Value_String('foo');
         $this->assertSame($xmlRpcValue, Zend_XmlRpc_Value::getXmlRpcValue($xmlRpcValue));
+    }
+
+    public function testGetXmlRpcTypeByValue()
+    {
+        $this->assertSame(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_NIL,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(new Zend_XmlRpc_Value_Nil)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_DATETIME,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(new DateTime)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_DATETIME,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(new Zend_Date)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_STRUCT,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(array('foo' => 'bar'))
+        );
+
+        $object = new stdClass;
+        $object->foo = 'bar';
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_STRUCT,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue($object)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_ARRAY,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(new stdClass)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_ARRAY,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(array(1, 3, 3, 7))
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_INTEGER,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(42)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_DOUBLE,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(13.37)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_BOOLEAN,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(true)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_BOOLEAN,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(false)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_NIL,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue(null)
+        );
+
+        $this->assertEquals(
+            Zend_XmlRpc_Value::XMLRPC_TYPE_STRING,
+            Zend_XmlRpc_Value::getXmlRpcTypeByValue('Zend Framework')
+        );
+    }
+
+    public function testGetXmlRpcTypeByValueThrowsExceptionOnInvalidValue()
+    {
+        $this->setExpectedException('Zend_XmlRpc_Value_Exception');
+        Zend_XmlRpc_Value::getXmlRpcTypeByValue(fopen(__FILE__, 'r'));
     }
 
     // Custom Assertions and Helper Methods

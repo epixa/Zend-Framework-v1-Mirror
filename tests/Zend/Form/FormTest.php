@@ -15,16 +15,14 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: FormTest.php 23522 2010-12-16 20:33:22Z andries $
+ * @version    $Id: FormTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
     define('PHPUnit_MAIN_METHOD', 'Zend_Form_FormTest::main');
 }
-
-// error_reporting(E_ALL);
 
 require_once 'Zend/Form.php';
 
@@ -45,7 +43,7 @@ require_once 'Zend/View.php';
  * @category   Zend
  * @package    Zend_Form
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Form
  */
@@ -579,7 +577,7 @@ class Zend_Form_FormTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @issue ZF-7067
+     * @group ZF-7067
      */
     public function testCanSetActionWithGetParams()
     {
@@ -2819,7 +2817,7 @@ class Zend_Form_FormTest extends PHPUnit_Framework_TestCase
         $this->assertSame($data, $this->form->getValidValues($data));
     }
 
-    /**#@+
+    /**
      * @group ZF-2988
      */
     public function testSettingErrorMessageShouldOverrideValidationErrorMessages()
@@ -3638,7 +3636,7 @@ class Zend_Form_FormTest extends PHPUnit_Framework_TestCase
         $this->assertRegexp('#<tr><td>Foo</td><td>.*?<input[^>]+>.*?</td><td>sample description</td></tr>#s', $html, $html);
     }
 
-    /**#@+
+    /**
      * @group ZF-3228
      */
     public function testShouldAllowSpecifyingSpecificElementsToDecorate()
@@ -4387,13 +4385,31 @@ class Zend_Form_FormTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1, substr_count($html, 'Customer Type'), $html);
     }
 
+    /**
+     * @group ZF-10491
+     * @group ZF-10734
+     * @group ZF-10731
+     */
     public function testAddElementToDisplayGroupByElementInstance()
     {
         $element = new Zend_Form_Element_Text('foo');
+        $elementTwo = new Zend_Form_Element_Text('baz-----');
 
-        $this->form->addElement($element);
-        $this->form->addDisplayGroup(array($element), 'bar');
-        $this->assertNotNull($this->form->getDisplayGroup('bar')->getElement('foo'));
+        $this->form->addElements(array($element, $elementTwo));
+        $this->form->addDisplayGroup(array($element, $elementTwo), 'bar');
+
+        $displayGroup = $this->form->getDisplayGroup('bar');
+        $this->assertNotNull($displayGroup->getElement('foo'));
+        $this->assertNotNull($displayGroup->getElement('baz'));
+
+        // clear display groups and elements
+        $this->form->clearDisplayGroups()
+                   ->clearElements();
+
+        $this->form->addDisplayGroup(array($element, $elementTwo), 'bar');
+        $displayGroup = $this->form->getDisplayGroup('bar');
+        $this->assertNotNull($displayGroup->getElement('foo'));
+        $this->assertNotNull($displayGroup->getElement('baz'));
     }
 
     /**
@@ -4414,6 +4430,26 @@ class Zend_Form_FormTest extends PHPUnit_Framework_TestCase
             $this->fail('Setting a view object using the options array should not throw an exception');
         }
         $this->assertNotEquals($result,'');
+    }
+    
+    /**
+     * @group ZF-11088
+     */
+    public function testAddErrorOnElementMakesFormInvalidAndReturnsCustomError()
+    {
+        $element = new Zend_Form_Element_Text('foo');
+        $errorString = 'This element made a booboo';
+        $element->addError($errorString);
+        $errorMessages = $element->getErrorMessages();
+        $this->assertSame(1, count($errorMessages));
+        $this->assertSame($errorString, $errorMessages[0]);
+        
+        $element2 = new Zend_Form_Element_Text('bar');
+        $this->form->addElement($element2);
+        $this->form->getElement('bar')->addError($errorString);
+        $errorMessages2 = $this->form->getElement('bar')->getErrorMessages();
+        $this->assertSame(1, count($errorMessages2));
+        $this->assertSame($errorString, $errorMessages2[0]);
     }
 }
 

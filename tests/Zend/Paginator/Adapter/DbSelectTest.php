@@ -15,9 +15,9 @@
  * @category   Zend
  * @package    Zend_Paginator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: DbSelectTest.php 23514 2010-12-15 19:29:04Z mjh_ca $
+ * @version    $Id: DbSelectTest.php 23775 2011-03-01 17:25:24Z ralph $
  */
 
 /**
@@ -41,7 +41,7 @@ require_once dirname(__FILE__) . '/../_files/TestTable.php';
  * @category   Zend
  * @package    Zend_Paginator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2010 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Paginator
  */
@@ -472,5 +472,27 @@ class Zend_Paginator_Adapter_DbSelectTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($expected, $adapter->getCountSelect()->__toString());
         $this->assertEquals(250, $adapter->count());
+    }
+
+    /**
+     * @group ZF-10884
+     */
+    public function testSetRowCountWithAlias()
+    {
+        $select = $this->_db->select();
+        $select->from('test', array(
+            Zend_Paginator_Adapter_DbSelect::ROW_COUNT_COLUMN => new Zend_Db_Expr('COUNT(DISTINCT number)')
+        ));
+
+        $this->_db->setProfiler(true);
+        $adapter = new Zend_Paginator_Adapter_DbSelect($this->_db->select());
+        $adapter->setRowCount($select);
+        $adapter->count();
+
+        $expected = 'SELECT COUNT(DISTINCT number) AS "zend_paginator_row_count" FROM "test"';
+        $lastQuery = $this->_db->getProfiler()
+                         ->getLastQueryProfile()
+                         ->getQuery();
+        $this->assertEquals($expected, $lastQuery);
     }
 }
