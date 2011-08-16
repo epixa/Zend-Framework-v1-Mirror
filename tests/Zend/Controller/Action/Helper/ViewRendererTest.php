@@ -17,7 +17,7 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ViewRendererTest.php 23775 2011-03-01 17:25:24Z ralph $
+ * @version    $Id: ViewRendererTest.php 24282 2011-07-28 18:59:26Z matthew $
  */
 
 // Call Zend_Controller_Action_Helper_ViewRendererTest::main() if this source file is executed directly.
@@ -827,6 +827,19 @@ class Zend_Controller_Action_Helper_ViewRendererTest extends PHPUnit_Framework_T
         $body = $this->response->getBody();
         $this->assertContains('fooUseHelper invoked', $body, 'Received ' . $body);
     }
+    /**
+     * @group ZF-10725
+     */
+    public function testThatCharactersStrippedFromActionNameByDispatcherAreAlsoStrippedFromViewScriptName()
+    {
+        $this->request->setModuleName('default')
+                      ->setControllerName('foo')
+                      ->setActionName('-myBar-');
+        $controller = new Bar_IndexController($this->request, $this->response, array());
+        $this->helper->setActionController($controller);
+        $scriptName = $this->helper->getViewScript();
+        $this->assertEquals('foo/my-bar.phtml', $scriptName);
+    }
 
     public function testCorrectViewHelperPathShouldBePropagatedWhenSubControllerInvokedInDefaultModule()
     {
@@ -839,10 +852,75 @@ class Zend_Controller_Action_Helper_ViewRendererTest extends PHPUnit_Framework_T
         $body = $this->response->getBody();
         $this->assertContains('SampleZfHelper invoked', $body, 'Received ' . $body);
     }
+    
+    /**
+     * @group ZF-11127
+     */
+    public function testViewSuffixInstanceNotSharedWhenViewHelperIsCloned()
+    {
+        $a = new Zend_Controller_Action_Helper_ViewRenderer();
+        $a->init();
+        $a->setViewSuffix('A');
+        
+        $this->assertEquals('A', $a->getViewSuffix());
+        
+        $b = clone $a;        
+        $this->assertEquals('A', $b->getViewSuffix());
+        $b->setViewSuffix('B');
+        
+        $this->assertEquals('B', $b->getViewSuffix());
+        $this->assertNotEquals('B', $a->getViewSuffix());
+    }
+    
+    /**
+     * @group ZF-10725
+     * @dataProvider providerViewScriptNameDoesNotIncludeDisallowedCharacters
+     */
+    public function testViewScriptNameDoesNotIncludeDisallowedCharacters($actionName)
+    {
+        $this->request->setModuleName('default')
+                      ->setControllerName('foo')
+                      ->setActionName($actionName);
+        $controller = new Bar_IndexController($this->request, $this->response, array());
+        $this->helper->setActionController($controller);
+        $scriptName = $this->helper->getViewScript();
+        $this->assertEquals('foo/my-bar.phtml', $scriptName);
+    }
+    
+    /**
+     * Data provider for testViewScriptNameDoesNotIncludeDisallowedCharacters
+     * @group ZF-10725
+     * @return array
+     */
+    public function providerViewScriptNameDoesNotIncludeDisallowedCharacters()
+    {
+        return array(
+            array('myBar-'),
+            array('-myBar'),
+            array('-myBar-'),
+            array('-MyBar-'),
+            array('MyBar-'),
+            array('-MyBar')
+        );
+    }
 
     protected function _normalizePath($path)
     {
         return str_replace(array('/', '\\'), '/', $path);
+    }
+
+    /**
+     * @group ZF-10725
+     */
+    public function testActionsWithLeadingCapitalLettersShouldNotInvokeTruncatedViewScripts()
+    {
+        $this->request->setModuleName('default')
+                      ->setControllerName('Controller')
+                      ->setActionName('Action');
+        $controller = new Bar_IndexController($this->request, $this->response, array());
+        $this->helper->setActionController($controller);
+        $scriptName = $this->helper->getViewScript();
+        $this->assertEquals('controller/action.phtml', $scriptName);
     }
 }
 

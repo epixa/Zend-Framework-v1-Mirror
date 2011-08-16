@@ -17,7 +17,7 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: StaticTest.php 23775 2011-03-01 17:25:24Z ralph $
+ * @version    $Id: StaticTest.php 24337 2011-08-01 13:04:41Z ezimuel $
  */
 
 require_once 'Zend/Http/Client.php';
@@ -549,6 +549,54 @@ class Zend_Http_Client_StaticTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group ZF-4236
+     */
+    public function testFormFileUpload()
+    {
+        $this->_client->setAdapter('Zend_Http_Client_Adapter_Test');
+        $this->_client->setUri('http://example.com');
+        $this->_client->setFileUpload('testFile.name', 'testFile', 'TESTDATA12345', 'text/plain');
+        $this->_client->request('POST');
+        
+        $expectedLines = file(dirname(__FILE__) . '/_files/ZF4236-fileuploadrequest.txt');
+        $gotLines = explode("\n", trim($this->_client->getLastRequest()));
+
+        $this->assertEquals(count($expectedLines), count($gotLines));
+        while (($expected = array_shift($expectedLines)) &&
+               ($got = array_shift($gotLines))) {
+
+            $expected = trim($expected);
+            $got = trim($got);
+            $this->assertRegExp("/^$expected$/", $got);
+        }
+    }
+    
+    /**
+     * @group ZF-4236
+     */
+    public function testClientBodyRetainsFieldOrdering()
+    {
+        $this->_client->setAdapter('Zend_Http_Client_Adapter_Test');
+        $this->_client->setUri('http://example.com');
+        $this->_client->setParameterPost('testFirst', 'foo');
+        $this->_client->setFileUpload('testFile.name', 'testFile', 'TESTDATA12345', 'text/plain');
+        $this->_client->setParameterPost('testLast', 'bar');
+        $this->_client->request('POST');
+        
+        $expectedLines = file(dirname(__FILE__) . '/_files/ZF4236-clientbodyretainsfieldordering.txt');
+        $gotLines = explode("\n", trim($this->_client->getLastRequest()));
+
+        $this->assertEquals(count($expectedLines), count($gotLines));
+        while (($expected = array_shift($expectedLines)) &&
+               ($got = array_shift($gotLines))) {
+
+            $expected = trim($expected);
+            $got = trim($got);
+            $this->assertRegExp("/^$expected$/", $got);
+        }
+    }
+
+    /**
      * Test that we properly calculate the content-length of multibyte-encoded
      * request body
      *
@@ -627,7 +675,58 @@ class Zend_Http_Client_StaticTest extends PHPUnit_Framework_TestCase
 			return;
 		}
     }
+    
+	/**
+     * Test that we can handle trailing space in location header
+     * 
+     * @group ZF-11283
+     * @link http://framework.zend.com/issues/browse/ZF-11283
+     */
+    public function testRedirectWithTrailingSpaceInLocationHeaderZF11283()
+    {
+        $this->_client->setUri('http://example.com/');
+        $this->_client->setAdapter('Zend_Http_Client_Adapter_Test');
+        
+        $adapter = $this->_client->getAdapter(); /* @var $adapter Zend_Http_Client_Adapter_Test */
+        
+        $adapter->setResponse(<<<RESPONSE
+HTTP/1.1 302 Redirect
+Content-Type: text/html; charset=UTF-8
+Location: /test   
+Server: Microsoft-IIS/7.0
+Date: Tue, 19 Apr 2011 11:23:48 GMT
 
+RESPONSE
+        );
+
+        $res = $this->_client->request('GET');
+        
+        $lastUri = $this->_client->getUri();
+        
+        $this->assertEquals("/test", $lastUri->getPath());
+    }
+
+    /**
+     * @group ZF-11162
+     */
+    function testClientDoesNotModifyPassedUri() {
+        $uri = Zend_Uri_Http::fromString('http://example.org/');
+        $orig = clone $uri;
+        $client = new Zend_Http_Client($uri);
+        $this->assertEquals((string)$orig, (string)$uri);
+    }
+    /*
+     * @group ZF-9206
+     */
+    function testStreamWarningRewind()
+    {
+        $httpClient = new Zend_Http_Client();
+        $httpClient->setUri('http://example.org');
+        $httpClient->setMethod(Zend_Http_Client::GET);
+        ob_start();
+        $httpClient->setStream('php://output')->request();
+        ob_clean();
+    }
     /**
      * Data providers
      */

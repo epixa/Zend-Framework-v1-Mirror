@@ -17,7 +17,7 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: ApplicationTest.php 23775 2011-03-01 17:25:24Z ralph $
+ * @version    $Id: ApplicationTest.php 24101 2011-06-01 02:21:15Z adamlundrigan $
  */
 
 if (!defined('PHPUnit_MAIN_METHOD')) {
@@ -285,6 +285,25 @@ class Zend_Application_ApplicationTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group ZF-10898
+     */
+    public function testPassingStringIniDistfileConfigPathOptionToConstructorShouldLoadOptions()
+    {
+        $application = new Zend_Application('testing', dirname(__FILE__) . '/_files/appconfig.ini.dist');
+        $this->assertTrue($application->hasOption('foo'));
+    }
+
+    /**
+     * @group ZF-10898
+     */
+    public function testPassingArrayOptionsWithConfigKeyDistfileShouldLoadOptions()
+    {
+        $application = new Zend_Application('testing', array('bar' => 'baz', 'config' => dirname(__FILE__) . '/_files/appconfig.ini.dist'));
+        $this->assertTrue($application->hasOption('foo'));
+        $this->assertTrue($application->hasOption('bar'));
+    }
+
+    /**
      * @group ZF-10568
      */
     public function testPassingStringYamlConfigPathOptionToConstructorShouldLoadOptions()
@@ -299,6 +318,15 @@ class Zend_Application_ApplicationTest extends PHPUnit_Framework_TestCase
     public function testPassingStringJsonConfigPathOptionToConstructorShouldLoadOptions()
     {
         $application = new Zend_Application('testing', dirname(__FILE__) . '/_files/appconfig.json');
+        $this->assertTrue($application->hasOption('foo'));
+    }
+    
+    /**
+     * @group ZF-11425
+     */
+    public function testPassingStringYmlConfigPathOptionToConstructorShouldLoadOptionsAsYaml()
+    {
+        $application = new Zend_Application('testing', dirname(__FILE__) . '/_files/appconfig.yml');
         $this->assertTrue($application->hasOption('foo'));
     }
 

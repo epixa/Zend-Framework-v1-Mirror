@@ -1135,17 +1135,24 @@ class Zend_ViewTest extends PHPUnit_Framework_TestCase
 
     /**
      * @group ZF-9000
+	 * @group ZF-4622
      */
-    public function testAddingStreamSchemeAsScriptPathShouldNotReverseSlashesOnWindows()
+    public function testAddingStreamSchemeAsScriptPathShouldNotMangleThePath()
     {
-        if (false === strstr(strtolower(PHP_OS), 'windows')) {
-            $this->markTestSkipped('Windows-only test');
-        }
     	$view = new Zend_View();
         $path = rtrim('file://' . str_replace('\\', '/', realpath(dirname(__FILE__))), '/') . '/';
         $view->addScriptPath($path);
         $paths = $view->getScriptPaths();
         $this->assertContains($path, $paths, var_export($paths, 1));
+    }
+    
+    /**
+     * @group ZF-10042
+     */
+    public function testConstructViewObjectWithInitialVariables()
+    {
+        $view = new Zend_View(array('assign' => array('foo' => 'bar')));
+        $this->assertEquals('bar', $view->foo);
     }
 }
 

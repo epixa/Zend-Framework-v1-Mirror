@@ -17,7 +17,7 @@
  * @subpackage UnitTests
  * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: MvcTest.php 23775 2011-03-01 17:25:24Z ralph $
+ * @version    $Id: MvcTest.php 24235 2011-07-13 18:13:45Z matthew $
  */
 
 require_once 'Zend/Navigation/Page/Mvc.php';
@@ -200,6 +200,40 @@ class Zend_Navigation_Page_MvcTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(false, $page->isActive());
     }
 
+    public function testIsActiveIsRouteAware()
+    {
+        $page = new Zend_Navigation_Page_Mvc(array(
+            'label' => 'foo',
+            'action' => 'myaction',
+            'route' => 'myroute',
+            'params' => array(
+                'page' => 1337
+            )
+        ));
+
+        $this->_front->getRouter()->addRoute(
+            'myroute',
+            new Zend_Controller_Router_Route(
+                'lolcat/:action/:page',
+                array(
+                    'module'     => 'default',
+                    'controller' => 'foobar',
+                    'action'     => 'bazbat',
+                    'page'       => 1
+                )
+            )
+        );
+
+        $this->_front->getRequest()->setParams(array(
+            'module' => 'default',
+            'controller' => 'foobar',
+            'action' => 'myaction',
+            'page' => 1337
+        ));
+
+        $this->assertEquals(true, $page->isActive());
+    }
+
     public function testActionAndControllerAccessors()
     {
         $page = new Zend_Navigation_Page_Mvc(array(
@@ -362,5 +396,48 @@ class Zend_Navigation_Page_MvcTest extends PHPUnit_Framework_TestCase
         Zend_Navigation_Page_Mvc::setUrlHelper($old);
 
         $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * @group ZF-11550
+     */
+    public function testNullValuesInMatchedRouteWillStillReturnMatchedPage()
+    {
+        $page = new Zend_Navigation_Page_Mvc(array(
+            'route'      => 'default',
+            'module'     => 'default',
+            'controller' => 'index',
+            'action'     => 'index',
+            'label'      => 'Home',
+            'title'      => 'Home',
+        ));
+
+        $this->_front->getRouter()->addRoute(
+            'default',
+            new Zend_Controller_Router_Route(
+                ':locale/:module/:controller/:action/*',
+                array(
+                    'locale'     => null,
+                    'module'     => 'default',
+                    'controller' => 'index',
+                    'action'     => 'index',
+                ),
+                array(
+                    'locale'     => '.*',
+                    'module'     => '.*',
+                    'controller' => '.*',
+                    'action'     => '.*',
+                )
+            )
+        );
+
+        $this->_front->getRequest()->setParams(array(
+            'locale'     => 'en_US',
+            'module'     => 'default',
+            'controller' => 'index',
+            'action'     => 'index',
+        ));
+
+        $this->assertEquals(true, $page->isActive());
     }
 }
